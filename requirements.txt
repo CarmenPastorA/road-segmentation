@@ -1,0 +1,8 @@
+torch
+numpy
+opencv-python
+pillow
+fastapi
+uvicorn
+gradio
+wandb
