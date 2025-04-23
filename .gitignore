@@ -1,5 +1,44 @@
-wandb/
+# Python cache & compiled files
 __pycache__/
-*.pyc
-*.pth
+*.py[cod]
+*.ipynb_checkpoints
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Python environment / secrets
 .env
+.venv/
+*.swp
+
+# Model checkpoints
+*.pth
+*.pt
+
+# Logs & debug
+*.log
+logs/
+
+# Data folders (don't push large files)
+data/processed/
+data/raw/
+data/sample_train/
+
+# Weights & Biases
+wandb/
+wandb-debug.log
+
+# Output artifacts
+*.png
+*.jpg
+*.jpeg
+*.csv
+*.json
+*.npy
+
+# VS Code settings (optional)
+.vscode/
+
+# Docker build cache (optional)
+*.tar

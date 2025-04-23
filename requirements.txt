@@ -1,8 +1,30 @@
-torch
-numpy
+# Core
+torch>=2.0.0
+torchvision>=0.15.0
 opencv-python
-pillow
+numpy
+pandas
+tqdm
+Pillow
+matplotlib
+
+# Augmentations
+albumentations
+pyproj
+
+# FastAPI + serving
 fastapi
 uvicorn
-gradio
-wandb
+python-multipart
+requests
+
+# Streamlit + maps
+streamlit
+streamlit-folium
+folium
+
+# Optional: For experiment tracking
+# wandb
+
+# Optional: If you use YAML config files
+# pyyaml

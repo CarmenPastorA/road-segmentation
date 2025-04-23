@@ -2,6 +2,9 @@
 # HOW TO RUN:
 # streamlit run app/ui.py           
 # -----------------------------
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
 from streamlit_folium import st_folium
@@ -11,12 +14,13 @@ import requests
 from io import BytesIO
 from pyproj import Transformer
 
+from app.api_client import send_image_for_prediction
+
 # -----------------------------
 # Dummy model prediction
 # -----------------------------
 def predict_road_segmentation(input_img):
-    # TODO: Replace with real model inference
-    return input_img
+    return send_image_for_prediction(input_img)
 
 # -----------------------------
 # Download image from WMS with reprojection
@@ -67,12 +71,34 @@ if option == "Upload Image":
 
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Downloaded Satellite Image", width=600)
+        st.session_state["uploaded_image"] = image  # Save it in session
 
         if st.button("Run Segmentation"):
-            segmented = predict_road_segmentation(image)
-            # TODO: Replace with real model inference
-            st.image(image, caption="Predicted Road Mask", width=600) 
+            with st.spinner("🔍 Running segmentation..."):
+                try:
+                    mask = predict_road_segmentation(image)
+                    st.session_state["uploaded_mask"] = mask
+                except Exception as e:
+                    st.error(str(e))
+
+        # Show side-by-side only after image is uploaded
+        if "uploaded_image" in st.session_state:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(st.session_state["uploaded_image"], caption="Uploaded Image", width=500)
+            with col2:
+                if "uploaded_mask" in st.session_state:
+                    st.image(st.session_state["uploaded_mask"], caption="Predicted Road Mask", width=500)
+
+        #st.markdown("---")
+        #if st.button("🔁 Reset upload"):
+        #    st.session_state.pop("uploaded_image", None)
+        #    st.session_state.pop("uploaded_mask", None)
+        #    if hasattr(st, "experimental_rerun"):
+        #        st.experimental_rerun()
+        #    else:
+        #        st.info("Reset. Please manually refresh the page.")
+
 
 # -----------------------------
 # Mode 2: Select from Map (folium + streamlit-folium)
@@ -106,18 +132,43 @@ elif option == "Select from Map":
 
             st.success(f"Selected area: {bbox_latlon}")
 
-            if st.button("Download and Show Satellite Image"):
-                img = download_wms_image(bbox_latlon)
-                if img:
-                    st.session_state["downloaded_img"] = img
-                    st.image(img, caption="Downloaded Satellite Image", width=600)
+            if st.button("Download Satellite Image"):
+                with st.spinner("Downloading satellite image..."):
+                    img = download_wms_image(bbox_latlon)
+                    if img:
+                        st.session_state["downloaded_img"] = img
+                        st.session_state.pop("segmentation_mask", None)  # Reset segmentation if new image
 
-            # Check if image exists in session to show segmentation button
+
+            # --- Display downloaded image and segmentation if available ---
             if "downloaded_img" in st.session_state:
-                if st.button("Run Segmentation"):
-                    img = st.session_state["downloaded_img"]
-                    segmented = predict_road_segmentation(img)
-                    st.image(segmented, caption="Predicted Road Mask", width=600)
+                img = st.session_state["downloaded_img"]
 
+                # Run Segmentation Button
+                if st.button("Run Segmentation"):
+                    with st.spinner("Running segmentation..."):
+                        try:
+                            mask = predict_road_segmentation(img)
+                            st.session_state["segmentation_mask"] = mask
+                        except Exception as e:
+                            st.error(str(e))
+
+                # Display Satellite Image and Mask
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.image(img, caption="Satellite Image", width=500)
+                with col2:
+                    if "segmentation_mask" in st.session_state:
+                        st.image(st.session_state["segmentation_mask"], caption="Predicted Road Mask", width=500)
+
+                # Reset Button (always aligned below both columns)
+                st.markdown("---")
+                if st.button("Reset selection"):
+                        st.session_state.clear()
+                        if hasattr(st, "experimental_rerun"):
+                            st.experimental_rerun()
+                        else:
+                            st.info("Selection reset. Please manually refresh the page.")
+                                        
     else:
         st.info("Draw a rectangle on the map to define your area of interest.")
