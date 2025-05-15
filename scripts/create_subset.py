@@ -41,7 +41,7 @@ def create_subset(
 
 if __name__ == "__main__":
     create_subset(
-        source_dir="data/raw/train",         # <--- your actual dataset
-        dest_dir="data/sample_train",        # <--- new folder for subset
-        num_samples=300                      # <--- change as needed
+        source_dir="data/raw/train",        
+        dest_dir="data/sample_train",  
+        num_samples=300                   
     )

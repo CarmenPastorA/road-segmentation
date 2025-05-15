@@ -11,8 +11,8 @@ import torch.nn.functional as F
 """
 MiniUNet (U-Net variant)
 
-This is a minimal U-Net-style architecture designed for binary segmentation tasks
-like road detection from satellite images.
+This is a minimal U-Net-style architecture designed the binary segmentation task
+of road detection from satellite images.
 
 - Encoder: 3 double conv blocks (32 → 64 → 128)
 - Bottleneck: 256 filters

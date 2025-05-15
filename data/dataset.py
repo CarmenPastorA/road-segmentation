@@ -8,14 +8,18 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 class RoadSegmentationDataset(Dataset):
-    def __init__(self, images_dir, masks_dir, transform=None):
+    def __init__(self, images_dir, masks_dir, transform=None, image_list=None):
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.transform = transform
 
-        self.image_ids = sorted([
-            f for f in os.listdir(images_dir) if f.endswith("_sat.jpg")
-        ])
+        # Use custom list if provided, otherwise list from directory
+        if image_list is not None:
+            self.image_ids = sorted([f for f in image_list if f.endswith("_sat.jpg")])
+        else:
+            self.image_ids = sorted([
+                f for f in os.listdir(images_dir) if f.endswith("_sat.jpg")
+            ])
 
     def __len__(self):
         return len(self.image_ids)

@@ -16,7 +16,7 @@ This project is an end-to-end proof of concept for segmenting roads from satelli
 The project is organized as follows:
 
 ```
-road-segmentation-poc/
+road-segmentation/
 ├── api/                        # API logic (FastAPI/Flask)
 │   ├── main.py                 # Entrypoint for serving the model
 │   ├── model_loader.py         # Load model & weights
@@ -87,11 +87,15 @@ Training is performed over `10` epochs, with logging to file and console. The be
 
 Segmentation performance on the validation set of the DeepGlobe Road Extraction Dataset.
 
-| Model         | Params ↓ | Loss       | IoU ↑ | Notes                        |
-|---------------|-----------|---------- |-------|------------------------------|
-| Mini U-Net    | ~1.2M     | BCE 0.143  | 0.098  | Baseline model (300 samples)|
-| U-Net++       | TBD       | TBD       | TBD   | U-Net with attention         |
-| DeepLabV3     | TBD       | TBD       | TBD   | Atrous convolutions          |
+| Model                 | Architecture                                                                 | Training Setup                                                | Validation IoU |
+|-----------------------|------------------------------------------------------------------------------|---------------------------------------------------------------|----------------|
+| Mini U-Net            | Simple encoder-decoder with 3 blocks and skip connections.                   | 30 epochs · Adam (lr=1e-3) · BCE Loss                         | 0.4903         |
+| Mini U-Net Plus       | Deeper version with dropout in the decoder.                                  | 30 epochs · Adam (lr=1e-3) · BCE + Dice Loss                  | 0.5153         |
+| DeepLabV3 + ResNet-50 | Pretrained encoder with ASPP head, binary output layer.                      | 50 epochs · Adam (lr=1e-3) · BCE + Dice Loss                  | 0.1848         |
+| Attention U-Net       | U-Net with attention gates in skip connections to focus on road structures. | 50 epochs · Adam (lr=1e-3) · ReduceLROnPlateau scheduler      | 0.5424         |
+| DeepLabV3 + ResNet-101| Deeper version with COCO-pretrained encoder.                                | 50 epochs · Adam (lr=1e-4)                                    | 0.3206         |
+| Segformer (HF)        | Transformer-based model pretrained for semantic segmentation.                | 50 epochs · Adam (lr=1e-4)                                    | 0.3458         |
+
 
 
 > 📌 Metrics computed with a binary threshold of 0.5. 
@@ -124,7 +128,10 @@ docker run -p 8000:8000 road-segmentation
 
 ## 📊 Experiments
 
-All experiments are tracked with [Weights & Biases](https://wandb.ai/).
+All training and evaluation runs are tracked using [Weights & Biases (W&B)](https://wandb.ai/), allowing full visibility into performance metrics, loss curves, and qualitative results.
+
+📌 **Project Dashboard:**  
+[🔗 Road Segmentation Project on W&B](https://api.wandb.ai/links/carmen-pastor-universidad-polit-cnica-de-madrid/nufmtfm3)
 
 ## 📁 Dataset
 

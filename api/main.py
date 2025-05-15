@@ -40,3 +40,7 @@ async def predict(file: UploadFile = File(...)):
     mask_np = postprocess_mask(mask)
 
     return {"mask": mask_np.tolist()}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
