@@ -29,8 +29,10 @@ class CachedRoadDataset(torch.utils.data.Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = self.images[idx].float()
-        mask = (self.masks[idx] / 255.0).float()
+        image = self.images[idx].float() / 255.0
+        mask = (self.masks[idx] > 0).float()
+        if image.ndim == 2:
+            image = image.unsqueeze(0)
         return image, mask
 
 

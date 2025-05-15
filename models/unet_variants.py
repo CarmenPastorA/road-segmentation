@@ -191,7 +191,7 @@ class AttU_Net(nn.Module):
         d2 = self.Up_conv2(torch.cat((x1, d2), dim=1))
 
         out = self.Conv_1x1(d2)
-        return torch.sigmoid(out)
+        return out
 
 
 # Factory para facilitar instanciación por nombre
