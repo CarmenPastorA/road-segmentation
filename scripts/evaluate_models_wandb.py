@@ -114,50 +114,98 @@ model_configs = {
 }
 }
 
+# To run just one model, uncomment the following lines:
+# def main():
+#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+#     model_name = "attunet_HVFlip_256"
+#     config = model_configs[model_name]
+
+#     print(f"Evaluating: {model_name}")
+
+#     wandb.init(
+#         project="road-segmentation",
+#         name=f"eval_{model_name}",
+#         config={
+#             "model": config["model_type"],
+#             "checkpoint": config["path"],
+#             "val_split": config["val_split"],
+#             "epochs": config["epochs"],
+#             "image_size": config["image_size"],
+#             "augmentations": config["augmentations"],
+#             "batch_size": 8,
+#             "loss": "BCE + Dice",
+#             "threshold": 0.5
+#         },
+#         reinit=True
+#     )
+
+#     model = get_unet_variant(config["model_type"]).to(device)
+#     model.load_state_dict(torch.load(config["path"], map_location=device))
+
+#     val_dataset = CachedRoadDataset(config["val_split"])
+#     val_loader = DataLoader(val_dataset, batch_size=8)
+
+#     iou, dice, examples = evaluate(model, val_loader, device)
+
+#     wandb.log({"IoU": iou, "Dice": dice})
+#     for idx, ex in enumerate(examples):
+#         wandb.log({
+#             f"example_{idx}/input": wandb.Image(ex["input"]),
+#             f"example_{idx}/prediction": wandb.Image(ex["prediction"]),
+#             f"example_{idx}/ground_truth": wandb.Image(ex["ground_truth"]),
+#         })
+
+#     wandb.finish()
+#     print(f"Finished: {model_name}")
+
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model_name = "attunet_HVFlip_256"
-    config = model_configs[model_name]
+    for model_name, config in model_configs.items():
+        print(f"Evaluating: {model_name}")
 
-    print(f"Evaluating: {model_name}")
+        # Init Weights & Biases
+        wandb.init(
+            project="road-segmentation",
+            name=f"eval_{model_name}",
+            config={
+                "model": config["model_type"],
+                "checkpoint": config["path"],
+                "val_split": config["val_split"],
+                "epochs": config["epochs"],
+                "image_size": config["image_size"],
+                "augmentations": config["augmentations"],
+                "batch_size": 8,
+                "loss": "BCELoss",
+                "threshold": 0.5
+            },
+            reinit=True
+        )
 
-    wandb.init(
-        project="road-segmentation",
-        name=f"eval_{model_name}",
-        config={
-            "model": config["model_type"],
-            "checkpoint": config["path"],
-            "val_split": config["val_split"],
-            "epochs": config["epochs"],
-            "image_size": config["image_size"],
-            "augmentations": config["augmentations"],
-            "batch_size": 8,
-            "loss": "BCE + Dice",
-            "threshold": 0.5
-        },
-        reinit=True
-    )
+        # Load model and weights
+        model = get_unet_variant(config["model_type"]).to(device)
+        model.load_state_dict(torch.load(config["path"], map_location=device))
 
-    model = get_unet_variant(config["model_type"]).to(device)
-    model.load_state_dict(torch.load(config["path"], map_location=device))
+        # Load validation data
+        val_dataset = CachedRoadDataset(config["val_split"])
+        val_loader = DataLoader(val_dataset, batch_size=8)
 
-    val_dataset = CachedRoadDataset(config["val_split"])
-    val_loader = DataLoader(val_dataset, batch_size=8)
+        # Evaluate
+        iou, dice, examples = evaluate(model, val_loader, device)
 
-    iou, dice, examples = evaluate(model, val_loader, device)
+        # Log metrics and images
+        wandb.log({"IoU": iou, "Dice": dice})
+        for idx, ex in enumerate(examples):
+            wandb.log({
+                f"example_{idx}/input": wandb.Image(ex["input"]),
+                f"example_{idx}/prediction": wandb.Image(ex["prediction"]),
+                f"example_{idx}/ground_truth": wandb.Image(ex["ground_truth"]),
+            })
 
-    wandb.log({"IoU": iou, "Dice": dice})
-    for idx, ex in enumerate(examples):
-        wandb.log({
-            f"example_{idx}/input": wandb.Image(ex["input"]),
-            f"example_{idx}/prediction": wandb.Image(ex["prediction"]),
-            f"example_{idx}/ground_truth": wandb.Image(ex["ground_truth"]),
-        })
-
-    wandb.finish()
-    print(f"Finished: {model_name}")
+        wandb.finish()
+        print(f"Finished: {model_name}")
 
 
 if __name__ == "__main__":
