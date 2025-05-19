@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Datasets y caché de entrenamiento
+data/
+*.pt
+
+# Checkpoints de entrenamiento
+models/unet_checkpoints/
+
+# Notebooks
+notebooks/
+*.ipynb_checkpoints/
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs y seguimiento
+*.log
+wandb/
+
+# Git
+.git
+.gitignore

@@ -1,0 +1,68 @@
+name: CI/CD Road Segmentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: roadsegacr.azurecr.io
+  API_IMAGE: road-segmentation-api
+  UI_IMAGE: road-segmentation-ui
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --no-cache-dir -i https://pypi.org/simple -i https://download.pytorch.org/whl/cpu
+
+    - name: Run unit tests
+      run: |
+        pytest tests/ --verbose --junitxml=test-results.xml
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push API Docker image
+      run: |
+        docker build -f Dockerfile.api -t ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.sha }} .
+        docker push ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.sha }}
+        docker tag ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:latest
+
+    - name: Build and push UI Docker image
+      run: |
+        docker build -f app/Dockerfile -t ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:${{ github.sha }} .
+        docker push ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:${{ github.sha }}
+        docker tag ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:latest
+
+    - name: Deploy API to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: roadseg-api
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
+        images: ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:latest
+
+    - name: Deploy UI to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: roadseg-ui
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_UI }}
+        images: ${{ env.REGISTRY }}/${{ env.UI_IMAGE }}:latest

@@ -1,0 +1,36 @@
+# Core dependencies (CPU-only)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.4.1+cpu
+torchvision==0.19.1+cpu
+opencv-python
+numpy<2.0.0
+pandas
+tqdm
+Pillow
+matplotlib
+
+pytest==8.3.3
+pytest-asyncio==0.24.0  
+requests==2.32.3
+httpx==0.27.2
+
+# Data augmentations
+albumentations
+pyproj
+
+# FastAPI backend
+fastapi
+uvicorn
+python-multipart
+requests
+
+# Streamlit frontend + map viewer
+streamlit
+streamlit-folium
+folium
+
+# Optional: experiment tracking (commented out for now)
+# wandb
+
+# Optional: if using config files
+# pyyaml
