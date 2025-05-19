@@ -14,13 +14,21 @@ from api.utils import preprocess_image, postprocess_mask
 
 app = FastAPI(title="Road Segmentation API")
 
-# Load model unless testing
-model = device = None
-if not os.environ.get("SKIP_MODEL_LOADING"):
-    model, device = load_model()
+model = None
+device = None
+
+@app.on_event("startup")
+async def load_weights():
+    global model, device
+    if os.environ.get("SKIP_MODEL_LOADING") != "1":
+        model, device = load_model()
 
 @app.post("/predict-image")
 async def predict_image(file: UploadFile = File(...)):
+    global model, device
+    if model is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+
     image_bytes = await file.read()
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -36,6 +44,10 @@ async def predict_image(file: UploadFile = File(...)):
 
 @app.post("/predict-binary")
 async def predict(file: UploadFile = File(...)):
+    global model, device
+    if model is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+
     image_bytes = await file.read()
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
