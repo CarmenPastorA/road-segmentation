@@ -74,12 +74,9 @@ async def predict_image(file: UploadFile = File(...)):
     img_tensor = img_tensor.unsqueeze(0).to(device)  # [1, 3, 256, 256]
 
     # Inferencia
-    model.eval()
-    with torch.no_grad():
-        with torch.amp.autocast(device_type='cuda'):
-            output = model(img_tensor)
-            pred = torch.sigmoid(output)
-            pred = (pred > 0.5).float()
+    output = model(img_tensor)
+    pred = torch.sigmoid(output)
+    pred = (pred > 0.5).float()
 
     # Convertir la máscara a PNG
     mask_np = pred.squeeze(0).cpu().numpy() * 255  # Convertir a uint8
