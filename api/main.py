@@ -36,9 +36,12 @@ async def predict_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail="Invalid image file")
 
     # RGB -> BGR (The model expects BGR format)
-    image_np = np.array(image)[..., ::-1]
-    input_tensor = preprocess_image(image_np, device)
+    #image_np = np.array(image)[..., ::-1]
+    input_tensor = preprocess_image(image, device)
     
+    # Swap RGB to BGR después de la conversión a tensor
+    input_tensor = input_tensor[:, [2, 1, 0], :, :]
+
     output = model(input_tensor)
     mask_np = postprocess_mask(output)
 
