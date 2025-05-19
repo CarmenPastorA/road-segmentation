@@ -21,14 +21,15 @@ TEST_IMAGE_PATH = "tests/test.jpg"
 @patch("api.model_loader.load_model")
 async def test_predict_image_valid(mock_load_model):
     mock_load_model.return_value = (None, None)
-    dummy_mask = torch.zeros((1, 1, 256, 256))
+    from api import main
+    main.model = lambda x: torch.zeros((1, 1, 256, 256))
+    main.device = "cpu"
 
     assert os.path.exists(TEST_IMAGE_PATH), f"Test image {TEST_IMAGE_PATH} not found"
     img = Image.open(TEST_IMAGE_PATH).convert("RGB")
-    
-    with patch("api.main.model", lambda x: dummy_mask):
-        with open(TEST_IMAGE_PATH, "rb") as img:
-            response = client.post("/predict-image", files={"file": ("test.jpg", img, "image/jpeg")})
+
+    with open(TEST_IMAGE_PATH, "rb") as img:
+        response = client.post("/predict-image", files={"file": ("test.jpg", img, "image/jpeg")})
 
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
     assert response.headers["content-type"] == "image/png"
@@ -41,14 +42,15 @@ async def test_predict_image_valid(mock_load_model):
 @patch("api.model_loader.load_model")
 async def test_predict_binary_valid(mock_load_model):
     mock_load_model.return_value = (None, None)
-    dummy_mask = torch.zeros((1, 1, 256, 256))
+    from api import main
+    main.model = lambda x: torch.zeros((1, 1, 256, 256))
+    main.device = "cpu"
 
     assert os.path.exists(TEST_IMAGE_PATH), f"Test image {TEST_IMAGE_PATH} not found"
     img = Image.open(TEST_IMAGE_PATH).convert("RGB")
 
-    with patch("api.main.model", lambda x: dummy_mask):
-        with open(TEST_IMAGE_PATH, "rb") as img:
-            response = client.post("/predict-binary", files={"file": ("test.jpg", img, "image/jpeg")})
+    with open(TEST_IMAGE_PATH, "rb") as img:
+        response = client.post("/predict-binary", files={"file": ("test.jpg", img, "image/jpeg")})
 
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
     assert "mask" in response.json(), f"Response missing 'mask': {response.text}"
@@ -59,6 +61,10 @@ async def test_predict_binary_valid(mock_load_model):
 
 @pytest.mark.asyncio
 async def test_predict_image_invalid():
+    from api import main
+    main.model = lambda x: torch.zeros((1, 1, 256, 256))
+    main.device = "cpu"
+
     invalid_path = "tests/invalid.txt"
     with open(invalid_path, "w") as f:
         f.write("not an image")
@@ -69,6 +75,10 @@ async def test_predict_image_invalid():
 
 @pytest.mark.asyncio
 async def test_predict_binary_empty():
+    from api import main
+    main.model = lambda x: torch.zeros((1, 1, 256, 256))
+    main.device = "cpu"
+
     empty_path = "tests/empty.jpg"
     with open(empty_path, "wb") as empty:
         pass
