@@ -27,60 +27,28 @@ async def load_weights():
         model, device = load_model()
 
 @app.post("/predict-image")
-#async def predict_image(file: UploadFile = File(...)):
-    # global model, device
-    # if model is None:
-    #     raise HTTPException(status_code=500, detail="Model not loaded")
-
-    # image_bytes = await file.read()
-    # try:
-    #     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    # except UnidentifiedImageError:
-    #     raise HTTPException(status_code=422, detail="Invalid image file")
-
-    # # RGB -> BGR (The model expects BGR format)
-    # #image_np = np.array(image)[..., ::-1]
-    # input_tensor = preprocess_image(image, device)
-
-    # # Swap RGB to BGR después de la conversión a tensor
-    # input_tensor = input_tensor[:, [2, 1, 0], :, :]
-
-    # output = model(input_tensor)
-    # mask_np = postprocess_mask(output)
-
-    # _, buffer = cv2.imencode(".png", mask_np * 255)
-    # return Response(content=buffer.tobytes(), media_type="image/png")
 async def predict_image(file: UploadFile = File(...)):
     global model, device
     if model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
-    # Leer los bytes de la imagen
     image_bytes = await file.read()
     try:
-        # Abrir la imagen como RGB
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except UnidentifiedImageError:
         raise HTTPException(status_code=422, detail="Invalid image file")
 
-    # Transformar a tensor y reordenar canales RGB -> BGR
-    transform = T.Compose([
-        T.Resize((256, 256)),
-        T.ToTensor()
-    ])
+    # RGB -> BGR (The model expects BGR format)
+    #image_np = np.array(image)[..., ::-1]
+    input_tensor = preprocess_image(image, device)
 
-    img_tensor = transform(image)  # [3, 256, 256]
-    img_tensor = img_tensor[[2, 1, 0], :, :]  # RGB -> BGR
-    img_tensor = img_tensor.unsqueeze(0).to(device)  # [1, 3, 256, 256]
+    # Swap RGB to BGR después de la conversión a tensor
+    input_tensor = input_tensor[:, [2, 1, 0], :, :]
 
-    # Inferencia
-    output = model(img_tensor)
-    pred = torch.sigmoid(output)
-    pred = (pred > 0.5).float()
+    output = model(input_tensor)
+    mask_np = postprocess_mask(output)
 
-    # Convertir la máscara a PNG
-    mask_np = pred.squeeze(0).cpu().numpy() * 255  # Convertir a uint8
-    _, buffer = cv2.imencode(".png", mask_np)
+    _, buffer = cv2.imencode(".png", mask_np * 255)
     return Response(content=buffer.tobytes(), media_type="image/png")
 
 @app.post("/predict-binary")
