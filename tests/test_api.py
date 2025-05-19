@@ -1,8 +1,9 @@
+#test/test_api.py
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Desactiva la carga real del modelo
+# Skip loading real model during tests
 os.environ["SKIP_MODEL_LOADING"] = "1"
 
 import pytest
@@ -17,7 +18,7 @@ client = TestClient(app)
 TEST_IMAGE_PATH = "tests/test.jpg"
 
 @pytest.mark.asyncio
-@patch("api.model_loader.load_model")  # Solo este mock es necesario
+@patch("api.model_loader.load_model")
 async def test_predict_image_valid(mock_load_model):
     mock_load_model.return_value = (None, None)
     dummy_mask = np.zeros((256, 256), dtype=np.uint8)
@@ -28,7 +29,7 @@ async def test_predict_image_valid(mock_load_model):
     
     with patch("api.main.model", lambda x: dummy_mask):
         with open(TEST_IMAGE_PATH, "rb") as img:
-            response = client.post("/predict-image", files={"image": ("test.jpg", img, "image/jpeg")})
+            response = client.post("/predict-image", files={"file": ("test.jpg", img, "image/jpeg")})
 
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
     assert response.headers["content-type"] == "image/png"
@@ -49,7 +50,7 @@ async def test_predict_binary_valid(mock_load_model):
     
     with patch("api.main.model", lambda x: dummy_mask):
         with open(TEST_IMAGE_PATH, "rb") as img:
-            response = client.post("/predict-binary", files={"image": ("test.jpg", img, "image/jpeg")})
+            response = client.post("/predict-binary", files={"file": ("test.jpg", img, "image/jpeg")})
 
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
     assert "mask" in response.json(), f"Response missing 'mask': {response.text}"
@@ -64,7 +65,7 @@ async def test_predict_image_invalid():
     with open(invalid_path, "w") as f:
         f.write("This is not an image")
     with open(invalid_path, "rb") as invalid:
-        response = client.post("/predict-image", files={"image": ("invalid.txt", invalid, "text/plain")})
+        response = client.post("/predict-image", files={"file": ("invalid.txt", invalid, "text/plain")})
 
     assert response.status_code in [400, 422], f"Expected 400 or 422, got {response.status_code}"
     os.remove(invalid_path)
@@ -75,7 +76,7 @@ async def test_predict_binary_empty():
     with open(empty_path, "wb") as empty:
         pass
     with open(empty_path, "rb") as empty:
-        response = client.post("/predict-binary", files={"image": ("empty.jpg", empty, "image/jpeg")})
+        response = client.post("/predict-binary", files={"file": ("empty.jpg", empty, "image/jpeg")})
 
     assert response.status_code == 422
     os.remove(empty_path)
