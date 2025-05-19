@@ -6,10 +6,12 @@ from PIL import Image
 import io
 import pytest
 from fastapi.testclient import TestClient
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from unittest.mock import patch
 from api.main import app
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 os.environ["SKIP_MODEL_LOADING"] = "1"
 
 client = TestClient(app)
