@@ -1,6 +1,9 @@
+#test/test_api.py
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+os.environ["SKIP_MODEL_LOADING"] = "1"
 
 import pytest
 from fastapi.testclient import TestClient

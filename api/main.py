@@ -14,8 +14,10 @@ from api.utils import preprocess_image, postprocess_mask
 
 app = FastAPI(title="Road Segmentation API")
 
-# Load model once
-model, device = load_model()
+# Load model only if not running in test mode
+model = device = None
+if not os.environ.get("SKIP_MODEL_LOADING"):
+    model, device = load_model()
 
 @app.post("/predict-image")
 async def predict_image(file: UploadFile = File(...)):
