@@ -19,16 +19,7 @@ model, device = load_model()
 
 @app.post("/predict-image")
 async def predict_image(file: UploadFile = File(...)):
-    # image_bytes = await file.read()
-    # image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-    # input_tensor = preprocess_image(image, device)
-    # output = model(input_tensor)
-    # mask_np = postprocess_mask(output)
-
-    # # Convert mask to binary PNG
-    # _, buffer = cv2.imencode(".png", mask_np * 255)
-    # return Response(content=buffer.tobytes(), media_type="image/png")
     try:
         image_bytes = await file.read()
 
@@ -39,7 +30,9 @@ async def predict_image(file: UploadFile = File(...)):
             raise HTTPException(status_code=422, detail="El archivo no es una imagen válida")
 
         try:
-            input_tensor = preprocess_image(image, device)
+            # RGB -> BGR (The model expects BGR format)
+            image_np = np.array(image)[..., ::-1]
+            input_tensor = preprocess_image(image_np, device)
             output = model(input_tensor)
             mask_np = postprocess_mask(output)
 
