@@ -39,15 +39,6 @@ road-segmentation/
 ├── docker/                     # Docker configurations
 │   └── .gitkeep                # Placeholder
 ├── models/                     # Model definitions and weights
-│   ├── unet_checkpoints/       # Trained model weights
-│   │   ├── best_attunet_HVFlip_256.pth
-│   │   ├── best_baseline.pth
-│   │   ├── best_miniunet_cache.pth
-│   │   ├── best_miniunet_cache_HVFlip_256.pth
-│   │   ├── best_miniunet_plus.pth
-│   │   ├── best_miniunet_plus_HVFlip_256.pth
-│   │   ├── best_miniunet_plus_HVFlip_256_50e.pth
-│   ├── best_attention.pth      # Primary model weights
 │   ├── mini_unet.py            # Mini U-Net implementation
 │   ├── unet_variants.py        # U-Net and variants (e.g., Attention U-Net)
 │   ├── __init__.py             # Package initialization
